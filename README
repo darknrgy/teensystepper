@@ -1,0 +1,43 @@
+Create a stepper waveform where an object is accelerating 
+as quickly as possible to max speed, cruising as long as possible, 
+then decelerating as quickly as possible. Instructions can be 
+interrupted and the algorithm will calculate the next travel 
+taking into account the current position and velocity.
+
+Basic physics equations
+d = 1/2 at^2
+t = sqrt(2d/a)
+v = at
+t = v/a
+
+Variables used either internally or in the data structures
+p_start: absolute starting position
+t_start: absolute start time
+v0: initial velocity
+dir: direction (1 or -1) from starting position to destination
+
+dd_0: distance it takes to decelerate from initial velocity v0
+d_accel: accel absolute distance
+d_cruise: cruise absolute distance
+d_decel: decel absolute distance
+
+dd_accel: accel distance delta
+dd_cruise: cruise distance delta
+dd_decel: decel distance delta
+
+d_dest: distance to destination
+dtotal: total distance for a symetrical profile used for finding accel/decel midpoint
+
+dt_0: time it takes to decelerate from initial velocity v0
+dt_reverse: delta time to reverse direction
+dt_accel: delta accel time
+dt_cruise: delta cruise time
+dt_decel: delta decel time
+
+t_accel: time to stop accel
+t_cruise: time to stop cruise
+t_decel: time to stop decel
+
+maxv: max velocity (constant)
+ttop: time to max velocity
+dtop: distance to max velocity
