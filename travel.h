@@ -3,6 +3,8 @@
 
 struct Travel {
 	float p_start = 0;
+	float p_next = 0;
+	bool retrigger = false;
 	float t_start = 0;
 	float d_dest = 0;
 	float v0 = 0;
@@ -21,7 +23,7 @@ struct TravelItem {
 	float v = 0; // velocity
 };
 
-void travel_create(Travel* result, TravelItem *travel_item, float maxv, float maxa, float t_start, float p) {
+void travel_create(Travel* travel, TravelItem *travel_item, float maxv, float maxa, float t_start, float p) {
 	float v0 = travel_item->v;
 	float d_dest = p - travel_item->p;
 
@@ -39,20 +41,22 @@ void travel_create(Travel* result, TravelItem *travel_item, float maxv, float ma
 		dtop
 	;
 
-	if (v0 * d_dest > 0) {
-		if (abs(d_dest) < abs(0.5 * maxa * pow((v0 / maxa), 2))) {
-			// TODO: impossible instruction. Unable to decel in time. 
-			return;
-		}
+	if (v0 * d_dest > 0 && (abs(d_dest) < abs(0.5 * maxa * pow((v0 / maxa), 2)))) {
+		// Impossible instruction to decel in time, queue up this instruction next
+		travel->p_next = p;
+		travel->retrigger = true;
+		return;
+	} else {
+		travel->retrigger = false;
 	}
 
 	static int dir;
 
-	result->d_dest = d_dest;
-	result->p_start = travel_item->p;
-	result->t_start = t_start;
-	result->v0 = v0;
-	result->maxa = maxa;
+	travel->d_dest = d_dest;
+	travel->p_start = travel_item->p;
+	travel->t_start = t_start;
+	travel->v0 = v0;
+	travel->maxa = maxa;
 
 	ttop = maxv / maxa;
 	dtop = 0.5f * maxa * pow(ttop,2);
@@ -89,14 +93,14 @@ void travel_create(Travel* result, TravelItem *travel_item, float maxv, float ma
 		dt_cruise = dd_cruise / maxv;
 	}
 
-	result->t_accel = dt_reverse + dt_accel;
-	result->t_cruise = result->t_accel + dt_cruise;
-	result->t_decel = result->t_cruise + dt_decel;
-	result->d_accel = dd_accel;
-	result->d_cruise = result->d_accel + dd_cruise;
-	result->maxv = maxv;
-	result->maxa = maxa;
-	result->dir = dir;
+	travel->t_accel = dt_reverse + dt_accel;
+	travel->t_cruise = travel->t_accel + dt_cruise;
+	travel->t_decel = travel->t_cruise + dt_decel;
+	travel->d_accel = dd_accel;
+	travel->d_cruise = travel->d_accel + dd_cruise;
+	travel->maxv = maxv;
+	travel->maxa = maxa;
+	travel->dir = dir;
 }
 
 void travel_tick(Travel *travel, TravelItem *travel_item,  float t) {
@@ -107,6 +111,10 @@ void travel_tick(Travel *travel, TravelItem *travel_item,  float t) {
 	if (t > travel->t_decel) {
 		p = travel->d_dest;
 		travel_item->v = 0;
+		if (travel->retrigger) {
+			travel->retrigger = false;
+			travel_create(travel, travel_item, travel->maxv, travel->maxa, t, travel->p_next);
+		}
 	} else if (t < travel->t_accel) {
 		// accelerating
 		p = travel->v0 * t + 0.5f * travel->maxa * travel->dir * pow(t, 2);
