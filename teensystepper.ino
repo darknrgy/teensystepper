@@ -5,7 +5,7 @@ IntervalTimer timer;
 Stepper stepper1;
 Travel travel1;
 TravelItem travel_item1;
-long elapsed_u_sec = 0;
+unsigned long elapsed_u_sec = 0;
 
 void setup() {
 	Serial.begin(9600);
@@ -23,6 +23,7 @@ void tick() {
   	travel_tick(&travel1, &travel_item1, elapsed_sec);
   	stepper1.p = travel_item1.p;
 	stepper_step(&stepper1, elapsed_u_sec);
+	if (!travel1.enable) elapsed_u_sec = 0;
 	interrupts();
 }
 

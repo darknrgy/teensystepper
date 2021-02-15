@@ -2,6 +2,7 @@
 #define MAX_A 1000000
 
 struct Travel {
+	bool enable = false;
 	float p_start = 0;
 	float p_next = 0;
 	bool retrigger = false;
@@ -52,6 +53,7 @@ void travel_create(Travel* travel, TravelItem *travel_item, float maxv, float ma
 
 	static int dir;
 
+	travel->enable = true;
 	travel->d_dest = d_dest;
 	travel->p_start = travel_item->p;
 	travel->t_start = t_start;
@@ -104,17 +106,23 @@ void travel_create(Travel* travel, TravelItem *travel_item, float maxv, float ma
 }
 
 void travel_tick(Travel *travel, TravelItem *travel_item,  float t) {
+	// do not allocate any memory
 	static float p;
 	static float dt;
 
 	t = t - travel->t_start;
-	if (t > travel->t_decel) {
-		p = travel->d_dest;
-		travel_item->v = 0;
+	
+	if (!travel->enable){
+		// disabled
 		if (travel->retrigger) {
 			travel->retrigger = false;
 			travel_create(travel, travel_item, travel->maxv, travel->maxa, t, travel->p_next);
 		}
+	} else if (t > travel->t_decel) {
+		// destination reached, disable
+		travel->enable = false;
+		p = travel->d_dest;
+		travel_item->v = 0;
 	} else if (t < travel->t_accel) {
 		// accelerating
 		p = travel->v0 * t + 0.5f * travel->maxa * travel->dir * pow(t, 2);

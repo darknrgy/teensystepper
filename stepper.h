@@ -20,9 +20,10 @@ struct Stepper {
 
 void stepper_step(Stepper *stepper, long elapsed) {
 	// do not allocate any memory
-	static long p; p = (long) (stepper->p);
-	static long step_pin_state;
+	static long p; 
+	static int step_pin_state;
 
+	p = (stepper->p);
 
 	if (stepper->state == STEP_ON) {
 		// minimum pulse width
