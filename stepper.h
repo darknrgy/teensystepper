@@ -12,7 +12,7 @@ struct Stepper {
 	int step_pin = 13;
 	int dir_pin = 14;
 	volatile float p = 0;
-	volatile int real_p = 0;
+	volatile long real_p = 0;
 	volatile int state = STEP_WAIT;
 	volatile int dir_pin_state = STEP_OFF;
 	elapsedMicros elapsed = 0;
@@ -20,7 +20,7 @@ struct Stepper {
 
 void stepper_step(Stepper *stepper, long elapsed) {
 	// do not allocate any memory
-	static long p; p = (int) (stepper->p);
+	static long p; p = (long) (stepper->p);
 	static long step_pin_state;
 
 
