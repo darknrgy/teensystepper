@@ -20,8 +20,8 @@ struct Stepper {
 
 void stepper_step(Stepper *stepper, long elapsed) {
 	// do not allocate any memory
-	static int p; p = (int) (stepper->p);
-	static int step_pin_state;
+	static long p; p = (int) (stepper->p);
+	static long step_pin_state;
 
 
 	if (stepper->state == STEP_ON) {
