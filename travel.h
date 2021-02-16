@@ -1,5 +1,11 @@
+#define MAX_V 8000
+#define MAX_A 10000
+
+/*
+fastest tested
 #define MAX_V 80000
 #define MAX_A 1000000
+*/
 
 struct Travel {
 	bool enable = false;
@@ -28,19 +34,17 @@ void travel_create(Travel* travel, TravelItem *travel_item, float maxv, float ma
 	float v0 = travel_item->v;
 	float d_dest = p - travel_item->p;
 
-	static float 
-		dd_0,
-		dd_accel,
-		dd_cruise,
-		dtotal,
-		dt_0,
-		dt_reverse,
-		dt_accel,
-		dt_cruise,
-		dt_decel,
-		ttop,
-		dtop
-	;
+	float dd_0 = 0;
+	float dd_accel = 0;
+	float dd_cruise = 0;
+	float dtotal = 0;
+	float dt_0 = 0;
+	float dt_reverse = 0;
+	float dt_accel = 0;
+	float dt_cruise = 0;
+	float dt_decel = 0;
+	float ttop = 0;
+	float dtop = 0;
 
 	if (v0 * d_dest > 0 && (abs(d_dest) < abs(0.5 * maxa * pow((v0 / maxa), 2)))) {
 		// Impossible instruction to decel in time, queue up this instruction next
@@ -107,11 +111,10 @@ void travel_create(Travel* travel, TravelItem *travel_item, float maxv, float ma
 
 void travel_tick(Travel *travel, TravelItem *travel_item,  float t) {
 	// do not allocate any memory
-	static float p;
 	static float dt;
 
 	t = t - travel->t_start;
-	
+
 	if (!travel->enable){
 		// disabled
 		if (travel->retrigger) {
@@ -121,24 +124,22 @@ void travel_tick(Travel *travel, TravelItem *travel_item,  float t) {
 	} else if (t > travel->t_decel) {
 		// destination reached, disable
 		travel->enable = false;
-		p = travel->d_dest;
+		travel_item->p = travel->p_start + travel->d_dest;
 		travel_item->v = 0;
 	} else if (t < travel->t_accel) {
 		// accelerating
-		p = travel->v0 * t + 0.5f * travel->maxa * travel->dir * pow(t, 2);
+		travel_item->p = travel->p_start + travel->v0 * t + 0.5f * travel->maxa * travel->dir * pow(t, 2);
 		travel_item->v = travel->v0 + travel->maxa * travel->dir * t;
 	} else if (t < travel->t_cruise) {
 		// cruising
 		dt = t - travel->t_accel;
-		p = travel->d_accel * travel->dir + travel->maxv * travel->dir * (dt);
+		travel_item->p = travel->p_start + travel->d_accel * travel->dir + travel->maxv * travel->dir * (dt);
 		travel_item->v = travel->maxv * travel->dir;
 	} else {
 		// decelerating
 		dt = t - travel->t_cruise;
-		p = travel->d_cruise * travel->dir + travel->maxv * travel->dir * (dt) + 0.5f * (travel->maxa * (-travel->dir)) * pow(dt, 2);
+		travel_item->p = travel->p_start + travel->d_cruise * travel->dir + travel->maxv * travel->dir * (dt) + 0.5f * (travel->maxa * (-travel->dir)) * pow(dt, 2);
 		travel_item->v = travel->maxv * travel->dir - travel->maxa * travel->dir * dt;
 	}
-
-	travel_item->p = travel->p_start + p;
 }
 

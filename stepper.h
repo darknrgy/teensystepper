@@ -1,4 +1,4 @@
-#define TICK_INTERVAL 1
+#define TICK_INTERVAL 10
 #define STEP_ON_TIME 1
 #define STEP_TIME 2
 #define STEP_OFF_TIME (STEP_TIME - STEP_ON_TIME)
@@ -9,12 +9,13 @@
 #define DIR_PIN_NEG 0
 
 struct Stepper {
-	int step_pin = 13;
-	int dir_pin = 14;
+	int step_pin;
+	int dir_pin;
 	volatile float p = 0;
 	volatile long real_p = 0;
 	volatile int state = STEP_WAIT;
 	volatile int dir_pin_state = STEP_OFF;
+
 	elapsedMicros elapsed = 0;
 };
 
