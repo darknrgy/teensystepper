@@ -16,11 +16,21 @@ unsigned long elapsed_u_sec = 0;
 Dimension dims[2];
 
 void set_gimbal(int x, int y) {
-	static float t = (float) elapsed_u_sec / 1000000;
+	static float t;
+	t = (float) elapsed_u_sec / 1000000;
 
 	noInterrupts();
 	dims[0].solve_for_min_time(MAX_V, MAX_A, t, x);
 	dims[1].solve_for_min_time(MAX_V, MAX_A, t, y);
+
+	if (!dims[0].travel.retrigger && !dims[0].travel.retrigger) {		
+		if (dims[0].get_travel_time() > dims[1].get_travel_time()) {
+			dims[1].solve_for_complement(MAX_V, MAX_A, t, y, dims[0]);
+		} else {
+			dims[0].solve_for_complement(MAX_V, MAX_A, t, x, dims[1]);
+		}
+	}
+
 	interrupts();
 }
 
@@ -61,14 +71,25 @@ void tick() {
 	interrupts();
 }
 
+/*void loop() {
+	float x, y;
+	x = -1000;
+	y = 100;
+	set_gimbal(x, y);
+	delay(999999999);
+
+}*/
+
+
+
 void loop() {
 	float x, y;
 
 	while(true) {
-		x = random(-500,500);
-		y = random(-500,500);
+		x = random(-250,250);
+		y = random(-250,250);
 		set_gimbal(x, y);
-		delay(random(1000, 1000));
+		delay(random(100, 1000));
 	}
 	
 }

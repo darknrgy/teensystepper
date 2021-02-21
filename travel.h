@@ -1,5 +1,5 @@
 #define MAX_V 8000
-#define MAX_A 10000
+#define MAX_A 20000
 
 /*
 fastest tested
@@ -14,12 +14,15 @@ struct Travel {
 	bool retrigger = false;
 	float t_start = 0;
 	float d_dest = 0;
+	float d_pseudo = 0;
 	float v0 = 0;
 	float t_accel = 0;
 	float t_cruise = 0;
 	float t_decel = 0;
 	float d_accel = 0;
 	float d_cruise = 0;
+	float dt_cruise = 0;
+	float dt_decel = 0;
 	float maxv = 0;
 	float maxa = 0;
 	int dir =1;
@@ -52,13 +55,13 @@ class Dimension {
 		float dt_0 = 0;
 		float dt_reverse = 0;
 		float dt_accel = 0;
-		float dt_cruise = 0;
-		float dt_decel = 0;
 		float ttop = 0;
 		float dtop = 0;
 
 		if (v0 * d_dest > 0 && (abs(d_dest) < abs(0.5 * maxa * pow((v0 / maxa), 2)))) {
 			// Impossible instruction to decel in time, queue up this instruction next
+			// TODO: Disables because it causes hitches, ignore instruction for now
+			return;
 			travel.p_next = p;
 			travel.retrigger = true;
 			return;
@@ -74,6 +77,7 @@ class Dimension {
 		travel.t_start = t_start;
 		travel.v0 = v0;
 		travel.maxa = maxa;
+		travel.d_pseudo = 0;
 
 		ttop = maxv / maxa;
 		dtop = 0.5f * maxa * pow(ttop,2);
@@ -88,36 +92,53 @@ class Dimension {
 
 		if (v0 * d_dest < 0) {
 			// if going the wrong direction, add decel time to turn around
-			dt_reverse = 2.0 * abs(dt_0);	
+			dt_reverse = 2.0 * abs(dt_0);
+			travel.d_pseudo = 0.5 * maxa * dir * pow(2.0 * dt_0, 2);
 		} else {
 			dt_reverse = 0;
 		}
 
 		if (dtop * 2 > dtotal) {
 			// cruise speed not achieved, use midpoint to start decel
-			dt_decel = sqrt(dtotal / maxa);
-			maxv = maxa * dt_decel;
+			travel.dt_decel = sqrt(dtotal / maxa);
+			maxv = maxa * travel.dt_decel;
 			dt_accel = (maxv - abs(v0)) / maxa;
 			dd_accel = abs(v0) * dt_accel + 0.5f * maxa * pow(dt_accel, 2);
-			dt_cruise = 0;
+			travel.dt_cruise = 0;
 			dd_cruise = 0;
 		} else {
 			// cruise speed possible, create all 3 phases
 			dt_accel = (maxv - abs(v0)) / maxa;
 			dd_accel = abs(v0) * dt_accel + 0.5f * maxa * pow(dt_accel, 2);
-			dt_decel = ttop;
+			travel.dt_decel = ttop;
 			dd_cruise = abs(d_dest) - (dtop + dd_accel);
-			dt_cruise = dd_cruise / maxv;
+			travel.dt_cruise = dd_cruise / maxv;
 		}
 
 		travel.t_accel = dt_reverse + dt_accel;
-		travel.t_cruise = travel.t_accel + dt_cruise;
-		travel.t_decel = travel.t_cruise + dt_decel;
+		travel.t_cruise = travel.t_accel + travel.dt_cruise;
+		travel.t_decel = travel.t_cruise + travel.dt_decel;
 		travel.d_accel = dd_accel;
 		travel.d_cruise = travel.d_accel + dd_cruise;
 		travel.maxv = maxv;
 		travel.maxa = maxa;
 		travel.dir = dir;
+	}
+
+	void solve_for_complement(float maxv, float maxa, float t_start, float p, Dimension complement) {
+		static float scale;
+		static float d, dc;
+		d = travel.d_dest + travel.d_pseudo;
+		dc = complement.travel.d_dest + complement.travel.d_pseudo;
+
+		if (d == 0 || dc == 0) {
+			scale = 1.0;
+		} else {
+			scale = abs(d /dc);	
+		}
+		
+		solve_for_min_time(maxv * scale, maxa * scale, t_start, p);
+
 	}
 
 	void tick(float elapsed_u_sec) {
@@ -168,5 +189,22 @@ class Dimension {
 
 	float get_travel_time() {
 		return travel.t_decel;
+	}
+
+	void print_travel() {
+		Serial.print("t_accel\t\t");
+		Serial.println(travel.t_accel);
+		Serial.print("t_cruise\t");
+		Serial.println(travel.t_cruise);
+		Serial.print("t_decel\t\t");
+		Serial.println(travel.t_decel);
+		Serial.print("d_accel\t\t");
+		Serial.println(travel.d_accel);
+		Serial.print("d_cruise\t");
+		Serial.println(travel.d_cruise);
+		Serial.print("maxv\t\t");
+		Serial.println(travel.maxv);
+		Serial.print("maxa\t\t");
+		Serial.println(travel.maxa);
 	}
 };
