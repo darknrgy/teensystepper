@@ -1,8 +1,14 @@
-#define MAX_V 8000
-#define MAX_A 20000
+#define MAX_V 500
+#define MAX_A 1500
 
 /*
-fastest tested
+// last known working with big steppers
+#define MAX_V 8000
+#define MAX_A 20000
+*/
+
+/*
+//fastest tested
 #define MAX_V 80000
 #define MAX_A 1000000
 */
@@ -39,10 +45,12 @@ class Dimension {
 	Travel travel;
 	Stepper stepper;
 
+	#ifdef STEPPER_TYPE_STEP_DIR
 	void set_stepper_pins(int step_pin, int dir_pin) {
 		stepper.step_pin = step_pin;
 		stepper.dir_pin = dir_pin;
 	}
+	#endif
 
 	void solve_for_min_time(float maxv, float maxa, float t_start, float p) {
 		float v0 = travel_item.v;

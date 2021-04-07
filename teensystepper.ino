@@ -1,4 +1,14 @@
+#define STEPPER_TYPE_MONOPOLE
+// #define STEPPER_TYPE_STEP_DIR
+
+#ifdef STEPPER_TYPE_STEP_DIR
 #include "stepper.h"
+#endif
+#ifdef STEPPER_TYPE_MONOPOLE
+#include "monostepper.h"
+#endif
+
+
 #include "travel.h"
 
 
@@ -37,13 +47,19 @@ void set_gimbal(int x, int y) {
 void setup() {
 	Serial.begin(9600);
 
-	pinMode(PIN_X_STEP, OUTPUT);
-	pinMode(PIN_X_DIR, OUTPUT);
-	pinMode(PIN_Y_STEP, OUTPUT);
-	pinMode(PIN_Y_DIR, OUTPUT);
+	pinMode(13, OUTPUT);
+	pinMode(14, OUTPUT);
+	pinMode(15, OUTPUT);
+	pinMode(16, OUTPUT);
+	pinMode(17, OUTPUT);
+	pinMode(18, OUTPUT);
+	pinMode(19, OUTPUT);
+	pinMode(20, OUTPUT);
 
-	dims[0].set_stepper_pins(PIN_X_STEP, PIN_X_DIR);
-	dims[1].set_stepper_pins(PIN_Y_STEP, PIN_Y_DIR);
+	#ifdef STEPPER_TYPE_MONOPOLE
+	stepper_set_pins(&dims[0].stepper, 13, 14, 15, 16);
+	stepper_set_pins(&dims[1].stepper, 17, 18, 19, 20);
+	#endif
 
 	timer.begin(tick, TICK_INTERVAL);  // 50 = 100us, or 10kHz
 }
