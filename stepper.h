@@ -64,3 +64,8 @@ void stepper_step(Stepper *stepper, long elapsed) {
 	digitalWrite(stepper->step_pin, step_pin_state);
   	digitalWrite(stepper->dir_pin, stepper->dir_pin_state);
 } // step: 13, dir: 14
+
+void stepper_set_pins(Stepper *stepper, int step_pin, int dir_pin) {
+	stepper->step_pin = step_pin;
+	stepper->dir_pin = dir_pin;
+}

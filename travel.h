@@ -1,5 +1,5 @@
-#define MAX_V 500
-#define MAX_A 1500
+#define MAX_V 40000
+#define MAX_A 40000
 
 /*
 // last known working with big steppers

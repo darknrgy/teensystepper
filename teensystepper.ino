@@ -1,5 +1,5 @@
-#define STEPPER_TYPE_MONOPOLE
-// #define STEPPER_TYPE_STEP_DIR
+// #define STEPPER_TYPE_MONOPOLE
+#define STEPPER_TYPE_STEP_DIR
 
 #ifdef STEPPER_TYPE_STEP_DIR
 #include "stepper.h"
@@ -61,6 +61,13 @@ void setup() {
 	stepper_set_pins(&dims[1].stepper, 17, 18, 19, 20);
 	#endif
 
+	#ifdef STEPPER_TYPE_STEP_DIR
+	stepper_set_pins(&dims[0].stepper, 13, 14);
+	stepper_set_pins(&dims[1].stepper, 15, 16);
+	#endif	
+
+
+
 	timer.begin(tick, TICK_INTERVAL);  // 50 = 100us, or 10kHz
 }
 
@@ -102,10 +109,10 @@ void loop() {
 	float x, y;
 
 	while(true) {
-		x = random(-250,250);
-		y = random(-250,250);
+		x = 0;
+		y = random(-20000,20000);
 		set_gimbal(x, y);
-		delay(random(100, 1000));
+		delay(random(400, 1500));
 	}
 	
 }
